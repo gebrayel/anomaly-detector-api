@@ -1,0 +1,56 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: anomaly-detector
+  namespace: monitoring
+  labels:
+    app: anomaly-detector
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: anomaly-detector
+  template:
+    metadata:
+      labels:
+        app: anomaly-detector
+    spec:
+      containers:
+        - name: anomaly-detector
+          image: anomaly-detector-api:latest
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 8000
+          env:
+            - name: IF_MODEL_PATH
+              value: "/app/models/isolation_forest.pkl"
+            - name: IF_CONTAMINATION
+              value: "0.05"
+            - name: IF_LOW_SEVERITY_THRESHOLD
+              value: "0.0"
+            - name: IF_HIGH_SEVERITY_THRESHOLD
+              value: "-0.1"
+            - name: IF_TRAIN_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: anomaly-detector-secret
+                  key: train-api-key
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8000
+            initialDelaySeconds: 10
+            periodSeconds: 30
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 8000
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          resources:
+            requests:
+              cpu: "100m"
+              memory: "256Mi"
+            limits:
+              cpu: "500m"
+              memory: "512Mi"

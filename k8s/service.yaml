@@ -1,0 +1,16 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: anomaly-detector
+  namespace: monitoring
+spec:
+  selector:
+    app: anomaly-detector
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 8000
+  type: ClusterIP
+---
+# El motor de remediación (Fase 3) llamará a:
+# http://anomaly-detector.monitoring.svc.cluster.local/predict
