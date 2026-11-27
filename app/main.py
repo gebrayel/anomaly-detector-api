@@ -1,9 +1,14 @@
 from fastapi import FastAPI, HTTPException, Header
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import FileResponse
 from contextlib import asynccontextmanager
+from pathlib import Path
 
 from app.model import detector, FEATURE_NAMES
 from app.schemas import MetricsInput, PredictionResult, ModelInfo
 from app.config import settings
+
+_ROOT = Path(__file__).resolve().parents[1]
 
 
 @asynccontextmanager
@@ -18,6 +23,18 @@ app = FastAPI(
     version="1.0.0",
     lifespan=lifespan,
 )
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+
+@app.get("/demo", include_in_schema=False)
+def demo():
+    return FileResponse(_ROOT / "demo.html", media_type="text/html")
 
 
 @app.get("/health", tags=["ops"])
